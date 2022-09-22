@@ -1,0 +1,16 @@
+.add-sub .form-group .form-control:focus{
+  box-shadow: none !important;
+  transition: none !important;
+}
+.add-sub .form-group .form-control:focus-visible{
+  transition: none !important;
+  box-shadow: none !important;
+}
+.add-sub .form-group .form-control:active{
+  box-shadow: none !important;
+  transition: none !important;
+}
+.add-sub .form-group .form-control{
+  transition: none !important;
+  box-shadow: none !important;
+}
