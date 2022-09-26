@@ -10,6 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { MultiSelect } from "react-multi-select-component";
 import Select from 'react-select'
 import '../css/project.css';
+import { useSelector } from 'react-redux';
 
 const ProjectNew = () => {
   const [picTaskSelected, setPicTaskSelected] = useState('');
@@ -21,7 +22,19 @@ const ProjectNew = () => {
   const [subbagdept, setSubbagdept] = useState("");
   const [options, setOptions] = useState([]);
   const [startproj, setStartproj] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [endproj, setEndproj] = useState("");
+
+  const {user} = useSelector((state) => state.auth);
+
+  let uuid = '';
+  let role = '';
+ 
+  if(user !== null){
+    uuid = user.uuid;
+    role = user.role;
+  }
 
   const [msg, setMsg] = useState("");
   const navigate = useNavigate();
@@ -38,7 +51,7 @@ const ProjectNew = () => {
     setOptions([]);
     const dataUser = await axios.get("http://192.168.10.30:9000/users");
     dataUser.data.forEach(dtUsr => {
-      let dataUser = { label: dtUsr.name, value: dtUsr.id };
+      let dataUser = { label: dtUsr.name, value: dtUsr.id, uid: dtUsr.uuid };
       setOptions(oldArray => [...oldArray,dataUser]);
     });
   };
@@ -69,10 +82,12 @@ const ProjectNew = () => {
   };
 
   const handleAddItem = (e) => {
-    updateList([...list, { task: items.toUpperCase(), bobot: bobot, pic: picTaskSelected}]);
+    updateList([...list, { task: items.toUpperCase(), bobot: bobot, pic: picTaskSelected, startdate: startDate, duedate: dueDate }]);
     setItem("");
     setBobot("");
     setPicTask("");
+    setStartDate("");
+    setDueDate("");
   };
 
   const saveProject = async (e) => {
@@ -99,7 +114,8 @@ const ProjectNew = () => {
           startproj: startproj,
           endproj: endproj,
           status: 'OPEN',
-          inputby: 'RIDO'
+          inputby: role.toUpperCase(),
+          uid: uuid
         });
         if (response) {
           toast.success(<small>Berhasil tambah project baru.</small>, {
@@ -275,20 +291,33 @@ const ProjectNew = () => {
               </button>
             </div>
             <div className="modal-body">
-              <div className="input-group mb-3">
-                <input id="nit" type="text" className="form-control" placeholder="new item task..." value={items} onChange={(e) => setItem(e.target.value)}/>
-                <input id="bobot" type="number" step={1} className="form-control" placeholder="bobot" value={bobot} onChange={(e) => setBobot(e.target.value)} />
+              <div className="form-group mb-3">
+                <label>Task Desc - Bobot</label><br />
+                <div className="input-group">
+                  <input id="nit" type="text" className="form-control" placeholder="new item task..." value={items} onChange={(e) => setItem(e.target.value)}/>
+                  <input id="bobot" type="number" step={1} className="form-control" placeholder="bobot" value={bobot} onChange={(e) => setBobot(e.target.value)} />
+                </div>
+              </div>
+              <div className="form-group my-2">
+                <label>Start Date - Due Date Task</label><br />
+                <div className="input-group">
+                  <input type="date" className="form-control" value={startDate} onChange={(e) => setStartDate(e.target.value)} placeholder="start date"/>
+                  <input type="date" className="form-control" value={dueDate} onChange={(e) => setDueDate(e.target.value)} placeholder="due date"/>
+                </div>
               </div>
               <div className="input-group my-1">
-                <Select 
-                  options={options} 
-                  value={picTaskSelected}
-                  onChange={handleChangePicTask}
-                />
-                <button onClick={getDataUser} className="btn btn-info ml-2">
-                  <i className="fa fa-refresh"></i> 
-                  Load Users
-                </button>
+                <label>Task PIC</label><br />
+                <div className="input-group">
+                  <Select 
+                    options={options} 
+                    value={picTaskSelected}
+                    onChange={handleChangePicTask}
+                  />
+                  <button onClick={getDataUser} className="btn btn-info ml-2">
+                    <i className="fa fa-refresh"></i> 
+                    Load Users
+                  </button>
+                </div>
               </div>
               <div className="input-group my-3">
                 <button className="btn btn-primary" onClick={handleAddItem} data-dismiss="modal"><i className="fa fa-plus-square"></i> Add Item</button>

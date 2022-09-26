@@ -5,21 +5,25 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from "axios";
+import { useSelector } from 'react-redux';
+import Moment from 'moment';
 
 const Home = () => {
   const [project, setProject] = useState([]);
+  const [newestTask, setNewestTask] = useState([]);
   const [all_pn, setAllpn] = useState("");
   const [open_pn, setOpenpn] = useState("");
   const [closed_pn, setClosedpn] = useState("");
   const [pending_pn, setPendingpn] = useState("");
-  
+  const {user} = useSelector((state) => state.auth);
+
+  let uuid = '';
+ 
+  if(user !== null){
+    uuid = user.uuid;
+  }
 
   const bg = ['progress-bar bg-info','progress-bar bg-danger','progress-bar bg-warning','progress-bar bg-primary','progress-bar bg-success'];
-
-  useEffect(() => {
-    getProjectNum();
-    getNewestProject();
-  }, []);
 
   const getProjectNum = async () => {
     const response = await axios.get(`http://192.168.10.30:9000/getprojectnum`);
@@ -33,6 +37,19 @@ const Home = () => {
     const response = await axios.get(`http://192.168.10.30:9000/newestproject`);
     setProject(response.data);
   };
+  
+  const getNewestTask = async () => {
+    const response = await axios.get(`http://192.168.10.30:9000/dbtasks/${uuid}`);
+    setNewestTask(response.data);
+  };
+
+
+  useEffect(() => {
+    getProjectNum();
+    getNewestProject();
+    getNewestTask();
+  }, []);
+
 
   return (
     <div className="container-fluid mt-4">
@@ -149,36 +166,29 @@ const Home = () => {
           {/* Tiket */}
           <div className="card shadow mb-4">
             <div className="card-header py-3">
-              <h6 className="m-0 font-weight-bold text-primary">New Ticket</h6>
+              <h6 className="m-0 font-weight-bold text-primary">New Tasks</h6>
             </div>
             <div className="card-body">
               <div className="row">
-                <div className="col-md-6 col-sm-6">
+
+              {newestTask.map((nt, index) => (
+                <div key={index} className="col-md-6 col-sm-6">
                   <div className="card shadow mb-2">
                     <div className="card-header bg-info py-3">
-                      <h6 className="m-0 font-weight-bold text-white">From: Rido</h6>
+                      <h6 className="m-0 font-weight-bold text-white">From: {nt.name.toUpperCase()}</h6>
                     </div>
                     <div className="card-body">
-                      <p className="mb-0">Msg: Before working with this theme, you should become familiar with the
-                        Bootstrap framework, especially the utility classes.</p>
+                      <p className="mb-0"><span className="badge badge-primary badge-pill">Desc</span> {nt.description}.</p>
+                      <span className="badge badge-secondary badge-pill">{nt.trxtype}</span> <span className="badge badge-secondary badge-pill">{Moment(nt.createdAt).format('DD-MM-YYYY')}</span>
                     </div>
                   </div>
                 </div>
-                <div className="col-md-6 col-sm-6">
-                  <div className="card shadow mb-2">
-                    <div className="card-header bg-info py-3">
-                      <h6 className="m-0 font-weight-bold text-white">From: Rido</h6>
-                    </div>
-                    <div className="card-body">
-                      <p className="mb-0">Msg: Before working with this theme, you should become familiar with the
-                        Bootstrap framework, especially the utility classes.</p>
-                    </div>
-                  </div>
-                </div>
+              ))}
+
               </div>
             </div>
             <div className="card-footer">
-              <Link to={'/all-tiket'} className="btn btn-sm btn-outline-info">See All Ticket</Link>
+              <Link to={'/tasks'} className="btn btn-sm btn-outline-info">See All Tasks</Link>
             </div>
           </div>
         </div>
