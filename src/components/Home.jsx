@@ -89,7 +89,7 @@ const Home = () => {
                   <div className="h5 mb-0 font-weight-bold text-gray-800">{open_pn}</div>
                 </div>
                 <div className="col-auto">
-                  <i className="fas fa-dollar-sign fa-2x text-gray-300" />
+                  <i className="fas fa-list fa-2x text-gray-300" />
                 </div>
               </div>
             </div>

@@ -14,6 +14,7 @@ import Modal from 'react-modal';
 import '../css/project.css';
 import '../css/dp.css';
 import { useSelector } from 'react-redux';
+import Select from 'react-select'
 
 const addSubTaskStyle = {
   content: {
@@ -30,13 +31,20 @@ const addSubTaskStyle = {
 
 const DetailProjects = () => {
   const navigate = useNavigate();
+  const [picSubTaskSelected, setPicSubTaskSelected] = useState('');
+  const [picTaskSelected, setPicTaskSelected] = useState('');
+  const [startDate, setStartDate] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [detailProject, setDetailProject] = useState([]);
   const [project, setProject] = useState("");
   const [subTask, setSubTask] = useState("");
-  const [picST, setPic] = useState("");
+  const [isDisabled, setIsDisabled] = useState(true);
   const [taskId, setTaskId] = useState("");
+  const [projectId, setProjectId] = useState("");
   const [options, setOptions] = useState([]);
   const [msg, setMsg] = useState("");
+  const [taskDesc, setTaskDesc] = useState("");
+  const [taskBobot, setTaskBobot] = useState("");
   const { projectid } = useParams();  
   let uuid = '';
   let userid = '';
@@ -51,6 +59,7 @@ const DetailProjects = () => {
   }
 
   const getDataUser = async () => {
+    setIsDisabled(false);
     setOptions([]);
     const dataUser = await axios.get("http://192.168.10.30:9000/users");
     dataUser.data.forEach(dtUsr => {
@@ -59,18 +68,30 @@ const DetailProjects = () => {
     });
   };
 
-  
-
   const [modalIsOpen, setIsOpen] = useState(false);
+  const [modalNewIsOpen, setNewIsOpen] = useState(false);
   const openModalSubTask = (taskid) => {
     setTaskId(taskid);
     setIsOpen(true);
   }
 
+  const openModalNewTask = (prjid) => {
+    setProjectId(prjid);
+    setNewIsOpen(true);
+  }
+
   function closeModal() {
     setSubTask("");
-    setPic("");
     setIsOpen(false);
+  }
+
+  function closeNewModal() {
+    setTaskDesc("");
+    setTaskBobot("");
+    setProjectId("");
+    setStartDate("");
+    setDueDate("");
+    setNewIsOpen(false);
   }
   
   const getDetailProject = async () => {
@@ -80,7 +101,6 @@ const DetailProjects = () => {
   };
   
   useEffect(() => {
-    getDataUser();
     getDetailProject();
   }, []);
 
@@ -176,12 +196,11 @@ const DetailProjects = () => {
   // add sub task by modal
   const handleAddSubTask = async (e) => {
     e.preventDefault();
-    console.log(taskId);
     try {
       const response = await axios.post(`http://192.168.10.30:9000/subtasks`, {
         taskid: taskId,
         subtask: subTask,
-        pic: picST.toUpperCase(),
+        pic: picSubTaskSelected.toUpperCase(),
         pid: projectid,
         from: uuid
       });
@@ -200,6 +219,47 @@ const DetailProjects = () => {
         window.location.reload();
       }, 3000);   
     } catch(error){
+      if (error.response) {
+        setMsg(error.response.data.msg);
+      }
+    }
+  }
+
+  const handleChangePicTask = (selectedOption) => {
+    setPicTaskSelected(selectedOption);
+  };
+  const handleChangePicSubTask = (selectedOption) => {
+    setPicSubTaskSelected(selectedOption);
+  };
+
+  // tambah task baru
+  const addNewTask = async(e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(`http://192.168.10.30:9000/tasks`, {
+        projectid: projectId,
+        taskdesc: taskDesc,
+        taskbobot: taskBobot,
+        startdate: startDate,
+        duedate: dueDate,
+        pic: picTaskSelected,
+        from: uuid
+      });
+      console.log(response);
+      if (response.status === 201) {
+        toast.success(<small>New Task berhasil disubmit. Msg: {response.status} - {response.statusText}</small>, {
+          theme: "colored"
+        });
+      } else {
+        toast.error(<small>New Task gagal disubmit. Msg: {response.status} - {response.statusText}</small>, {
+          theme: "colored"
+        });
+      }
+  
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000); 
+    } catch (error) {
       if (error.response) {
         setMsg(error.response.data.msg);
       }
@@ -276,9 +336,13 @@ const DetailProjects = () => {
                       Delete Project
                     </button>
                   }
-                  <button onClick={() => handleCancel(project && projectid)} disabled={(project && project.status === 'CANCEL') ? true : false} className="btn btn-secondary shadow">
+                  <button onClick={() => handleCancel(project && projectid)} disabled={(project && project.status === 'CANCEL') ? true : false} className="btn btn-secondary shadow mr-2">
                     <i className="fa fa-minus-square mr-2"></i>
                     Cancel Project
+                  </button>
+                  <button onClick={() => openModalNewTask(project && projectid)} disabled={( project && project.status === 'CLOSE') ? true : false} className="btn btn-primary shadow">
+                    <i className="fa fa-plus-square mr-2"></i>
+                    Add New Task 
                   </button>
                 </div>
               </div>
@@ -351,28 +415,80 @@ const DetailProjects = () => {
         </div>
         <small className="text-center text-warning">{msg}</small>
         <form onSubmit={(e) => handleAddSubTask(e)}>
-          <div className="modal-body add-sub">
+          <div className="modal-body">
             <div className="form-group">
               <label className="text-dark">Sub Task Name</label>
               <textarea className="form-control" type="text" placeholder="enter new sub task" value={subTask} onChange={(e) => setSubTask(e.target.value)} />
             </div>
             <div className="form-group">
               <label className="text-dark">Sub Task PIC</label>
-              <select className="form-control" value={picST} onChange={(e) => setPic(e.target.value)} required>
-                <option value="" disabled selected>--Pilih PIC--</option>
-                {
-                  options.map((item,index) => {
-                    return <option key={index} value={item.value}>{item.label}</option>
-                  })
-                }
-              </select>
+              <div className="input-group">
+                <Select 
+                  disabled={isDisabled}
+                  options={options} 
+                  value={picSubTaskSelected}
+                  onChange={handleChangePicSubTask}
+                />
+                <button type='button' onClick={getDataUser} className="btn btn-sm btn-info ml-2">
+                  <i className="fa fa-refresh"></i> 
+                  Load Users
+                </button>
+              </div>
             </div>
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-sm btn-secondary" onClick={closeModal}>Close</button>
-            <button type="submit" className="btn btn-sm btn-info" >Submit</button>
+            <button type="submit" className="btn btn-sm btn-primary" >Submit</button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        appElement={document.getElementById('page-top')}
+        isOpen={modalNewIsOpen}
+        onRequestClose={closeNewModal}
+        style={addSubTaskStyle}
+        contentLabel="Add Sub Task"
+      >
+        <small className="text-center text-warning">{msg}</small>
+        <form onSubmit={(e) => addNewTask(e)}>
+          <div className="modal-body">
+            <div className="form-group">
+              <label htmlFor="">Task Item Description</label>
+              <div className="input-group">
+                <input className="form-control" type="text" value={taskDesc} onChange={(e) => setTaskDesc(e.target.value)} placeholder="task item description" autoFocus />
+                <input className="form-control" type="text" value={taskBobot} onChange={(e) => setTaskBobot(e.target.value)} placeholder="bobot task" />
+              </div>
+            </div>
+            <div className="form-group">
+              <label htmlFor="">Start Date - Due Date</label>
+              <div className="input-group">
+                <input className="form-control" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}/>
+                <input className="form-control" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+              </div>
+            </div>
+            <div className="form-group">
+              <label htmlFor="">Task PIC</label>
+              <div className="input-group">
+                <Select 
+                  disabled={isDisabled}
+                  options={options} 
+                  value={picTaskSelected}
+                  onChange={handleChangePicTask}
+                />
+                <button type='button' onClick={getDataUser} className="btn btn-info ml-2">
+                  <i className="fa fa-refresh"></i> 
+                  Load Users
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-sm btn-secondary" onClick={closeNewModal}>Close</button>
+            <button type="submit" className="btn btn-sm btn-primary" >Submit</button>
+          </div>
+        </form>
+
       </Modal>
 
       <ToastContainer icon={false} autoClose={3000}/>
