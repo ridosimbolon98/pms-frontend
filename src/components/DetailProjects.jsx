@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import axios from "axios";
 import SubTask from './SubTask';
 import Moment from 'moment';
@@ -61,7 +61,7 @@ const DetailProjects = () => {
   const getDataUser = async () => {
     setIsDisabled(false);
     setOptions([]);
-    const dataUser = await axios.get("http://192.168.10.30:9000/users");
+    const dataUser = await axios.get(`${process.env.REACT_APP_API_URL}/users`);
     dataUser.data.forEach(dtUsr => {
       let dataUsers = { label: dtUsr.name, value: dtUsr.id };
       setOptions(oldArray => [...oldArray, dataUsers]);
@@ -83,6 +83,7 @@ const DetailProjects = () => {
   function closeModal() {
     setSubTask("");
     setIsOpen(false);
+	getDataUser();
   }
 
   function closeNewModal() {
@@ -95,7 +96,7 @@ const DetailProjects = () => {
   }
   
   const getDetailProject = async () => {
-    const response = await axios.get(`http://192.168.10.30:9000/tasks/${projectid}`);
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}/tasks/${projectid}`);
     setDetailProject(response.data);
     setProject(response.data[0]);
   };
@@ -112,7 +113,7 @@ const DetailProjects = () => {
       confirmButtonText: 'Close',
     }).then(async (result) => {
       if (result.isConfirmed) {
-        const response = await axios.patch(`http://192.168.10.30:9000/closetask/${id}`);
+        const response = await axios.patch(`${process.env.REACT_APP_API_URL}/closetask/${id}`);
         if (response.status === 200) {
           toast.success(<small>Task berhasil di closed. Msg: {response.status} - {response.statusText}</small>, {
             theme: "colored"
@@ -134,14 +135,19 @@ const DetailProjects = () => {
       text: 'Apakah anda yakin delete Task dengan ID: '+taskid+'?',
       showCancelButton: true,
       confirmButtonText: 'Delete',
-    }).then((result) => {
+    }).then(async(result) => {
       if (result.isConfirmed) {
-        toast.success(<small>Task berhasil dihapus. Msg: {response} - {response}</small>, {
-          theme: "colored"
-        });
-        setTimeout(() => {
-          window.location.reload();
-        }, 3000);
+        const response = await axios.delete(`${process.env.REACT_APP_API_URL}/tasks/${taskid}`);
+        if (response.status === 200) {
+          toast.success(<small>Task berhasil di dihapus. Msg: {response.status} - {response.statusText}</small>, {
+            theme: "colored"
+          });
+        } else {
+          toast.error(<small>Task gagal di dihapus. Msg: {response.status} - {response.statusText}</small>, {
+            theme: "colored"
+          });
+        }
+        getDetailProject();
       }
     })
   }
@@ -154,7 +160,7 @@ const DetailProjects = () => {
       confirmButtonText: 'Delete',
     }).then(async (result) => {
       if (result.isConfirmed) {
-        const response = await axios.delete(`http://192.168.10.30:9000/projects/${idprj}`);
+        const response = await axios.delete(`${process.env.REACT_APP_API_URL}/projects/${idprj}`);
         if (response.status === 200) {
           toast.success(<small>Project dengan ID: {idprj} berhasil dihapus. Msg: {response.status} - {response.statusText}</small>, {
             theme: "colored"
@@ -194,17 +200,17 @@ const DetailProjects = () => {
   }
 
   // add sub task by modal
-  const handleAddSubTask = async (e) => {
-    e.preventDefault();
+  const addNewSubTask = async(e) => {
+	e.preventDefault();
     try {
-      const response = await axios.post(`http://192.168.10.30:9000/subtasks`, {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/subtasks`, {
         taskid: taskId,
         subtask: subTask,
-        pic: picSubTaskSelected.toUpperCase(),
-        pid: projectid,
+        pic: picSubTaskSelected.value,
+        pid: project && projectid,
         from: uuid
       });
-      console.log(response);
+
       if (response.status === 201) {
         toast.success(<small>Sub Task berhasil disubmit. Msg: {response.status} - {response.statusText}</small>, {
           theme: "colored"
@@ -236,9 +242,9 @@ const DetailProjects = () => {
   const addNewTask = async(e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`http://192.168.10.30:9000/tasks`, {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/tasks`, {
         projectid: projectId,
-        taskdesc: taskDesc,
+        taskdesc: taskDesc.toUpperCase(),
         taskbobot: taskBobot,
         startdate: startDate,
         duedate: dueDate,
@@ -282,7 +288,7 @@ const DetailProjects = () => {
         </div>
         <div className="card card-body">
           <div className="my-2">
-          <div>
+            <div>
               <div className="form-group row">
                 <label className="col-sm-2 col-form-label">Project Name</label>
                 <div className="col-sm-10">
@@ -296,9 +302,9 @@ const DetailProjects = () => {
                 </div>
               </div>
               <div className="form-group row">
-                <label className="col-sm-2 col-form-label">Start Date</label>
+                <label className="col-sm-2 col-form-label">Periode</label>
                 <div className="col-sm-10">
-                  <input type="text" readOnly className="form-control" value={Moment(project && project.startproj).format('DD-MM-YYYY')} />
+                  <input type="text" readOnly className="form-control" value={Moment(project && project.startproj).format('YYYY')} />
                 </div>
               </div>
               <div className="form-group row">
@@ -330,20 +336,33 @@ const DetailProjects = () => {
                 <label className="col-sm-2 col-form-label">Action</label>
                 <div className="col-sm-10">
                   { 
-                    role === 'admin' &&
-                    <button onClick={() => handleDelete(project && projectid)} disabled={(project && project.status === 'CLOSE') ? true : false} className="btn btn-danger shadow mr-2">
-                      <i className="fa fa-lock mr-2"></i>
-                      Delete Project
-                    </button>
+                    role === 'admin' ?
+                    <>
+                      <button onClick={() => handleDelete(project && projectid)} disabled={(project && project.status === 'CLOSE') ? true : false} className="btn btn-danger shadow mr-2">
+                        <i className="fa fa-lock mr-2"></i>
+                        Delete Project
+                      </button>
+                      <button onClick={() => handleCancel(project && projectid)} disabled={(project && project.status === 'CANCEL') ? true : false} className="btn btn-secondary shadow mr-2">
+                        <i className="fa fa-minus-square mr-2"></i>
+                        Cancel Project
+                      </button>
+                      <button onClick={() => openModalNewTask(project && projectid)} disabled={( project && project.status === 'CLOSE') ? true : false} className="btn btn-primary shadow">
+                        <i className="fa fa-plus-square mr-2"></i>
+                        Add New Task 
+                      </button>
+                    </>
+                    :
+                    <>
+                      <button onClick={() => handleCancel(project && projectid)} disabled={(project && project.status === 'CANCEL') ? true : false} className="btn btn-secondary shadow mr-2">
+                        <i className="fa fa-minus-square mr-2"></i>
+                        Cancel Project
+                      </button>
+                      <button onClick={() => openModalNewTask(project && projectid)} disabled={( project && project.status === 'CLOSE') ? true : false} className="btn btn-primary shadow">
+                        <i className="fa fa-plus-square mr-2"></i>
+                        Add New Task 
+                      </button>
+                    </>
                   }
-                  <button onClick={() => handleCancel(project && projectid)} disabled={(project && project.status === 'CANCEL') ? true : false} className="btn btn-secondary shadow mr-2">
-                    <i className="fa fa-minus-square mr-2"></i>
-                    Cancel Project
-                  </button>
-                  <button onClick={() => openModalNewTask(project && projectid)} disabled={( project && project.status === 'CLOSE') ? true : false} className="btn btn-primary shadow">
-                    <i className="fa fa-plus-square mr-2"></i>
-                    Add New Task 
-                  </button>
                 </div>
               </div>
             </div>
@@ -377,20 +396,47 @@ const DetailProjects = () => {
                 </td>
                 <td className="text-center">{task.name}</td>
                 <td className="text-center">{Moment(task.due_date).format('DD-MM-YYYY')}</td>
-                <td className="text-center">
-                  <button onClick={() => openModalSubTask(task.taskid)} disabled={task.pic != `${userid}`} type="button" className="btn btn-info btn-sm mr-1 toltip">
-                    <i className="fa fa-plus-square mr-1"></i>
-                    <span className="tooltiptext">{task.pic != `${userid}` ? 'Disable Add Sub Task' : 'Add Sub Task'}</span>
-                  </button>
-                  <button onClick={() => handleCloseTask(task.taskid)} disabled={task.pic != `${userid}`} type="button" className="btn btn-warning btn-sm mr-1 toltip">
-                    <i className="fa fa-lock mr-1"></i>
-                    <span className="tooltiptext">{task.pic != `${userid}` ? 'Disable Close Task' : 'Close Task'}</span>
-                  </button>
-                  <button onClick={() => handleDeleteTask(task.id)} disabled={task.pic != `${userid}`} type="button" className="btn btn-danger btn-sm toltip">
-                    <i className="fa fa-trash mr-1 "></i>
-                    <span className="tooltiptext">{task.pic != `${userid}` ? 'Disable Delete Task' : 'Delete Task'}</span>
-                  </button>
-                </td>
+                
+                { 
+                  role === 'admin' ?
+                    <td className="text-center">
+                      <button onClick={() => openModalSubTask(task.taskid)} type="button" className="btn btn-info btn-sm mr-1 toltip">
+                        <i className="fa fa-plus-square mr-1"></i>
+                        <span className="tooltiptext">Add Sub Task</span>
+                      </button>
+                      <Link to={`/task/details/${task.taskid}`} type="button" className="btn btn-success btn-sm mr-1 toltip">
+                        <i className="fa fa-list mr-1"></i>
+                        <span className="tooltiptext">Detail Task</span>
+                      </Link>
+                      <button onClick={() => handleCloseTask(task.taskid)} type="button" className="btn btn-warning btn-sm mr-1 toltip">
+                        <i className="fa fa-lock mr-1"></i>
+                        <span className="tooltiptext">Close Task</span>
+                      </button>
+                      <button onClick={() => handleDeleteTask(task.taskid)} type="button" className="btn btn-danger btn-sm toltip">
+                        <i className="fa fa-trash mr-1 "></i>
+                        <span className="tooltiptext">Delete Task</span>
+                      </button>
+                    </td>
+                  :
+                    <td className="text-center">
+                      <button onClick={() => openModalSubTask(task.taskid)} disabled={task.pic != `${userid}`} type="button" className="btn btn-info btn-sm mr-1 toltip">
+                        <i className="fa fa-plus-square mr-1"></i>
+                        <span className="tooltiptext">{task.pic != `${userid}` ? 'Disable Add Sub Task' : 'Add Sub Task'}</span>
+                      </button>
+                      <Link to={`/task/details/${task.taskid}`} disabled={task.pic != `${userid}`} type="button" className="btn btn-success btn-sm mr-1 toltip">
+                        <i className="fa fa-list mr-1"></i>
+                        <span className="tooltiptext">{task.pic != `${userid}` ? 'Disable Detail Task' : 'Detail Task'}</span>
+                      </Link>
+                      <button onClick={() => handleCloseTask(task.taskid)} disabled={task.pic != `${userid}`} type="button" className="btn btn-warning btn-sm mr-1 toltip">
+                        <i className="fa fa-lock mr-1"></i>
+                        <span className="tooltiptext">{task.pic != `${userid}` ? 'Disable Close Task' : 'Close Task'}</span>
+                      </button>
+                      <button onClick={() => handleDeleteTask(task.taskid)} disabled={task.pic != `${userid}`} type="button" className="btn btn-danger btn-sm toltip">
+                        <i className="fa fa-trash mr-1 "></i>
+                        <span className="tooltiptext">{task.pic != `${userid}` ? 'Disable Delete Task' : 'Delete Task'}</span>
+                      </button>
+                    </td>
+                }
               </tr>
             ))}
 
@@ -407,14 +453,9 @@ const DetailProjects = () => {
         style={addSubTaskStyle}
         contentLabel="Add Sub Task"
       >   
-        <div className="modal-header">
-          <h4 className="modal-title" style={{color: '#36b9cc',fontWeight: '600'}}>Add Sub Task</h4>
-          <button type="button" onClick={closeModal} className="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">×</span>
-          </button>
-        </div>
+
         <small className="text-center text-warning">{msg}</small>
-        <form onSubmit={(e) => handleAddSubTask(e)}>
+        <form onSubmit={(e) => addNewSubTask(e)}>
           <div className="modal-body">
             <div className="form-group">
               <label className="text-dark">Sub Task Name</label>
@@ -448,7 +489,7 @@ const DetailProjects = () => {
         isOpen={modalNewIsOpen}
         onRequestClose={closeNewModal}
         style={addSubTaskStyle}
-        contentLabel="Add Sub Task"
+        contentLabel="Add New Task"
       >
         <small className="text-center text-warning">{msg}</small>
         <form onSubmit={(e) => addNewTask(e)}>

@@ -23,7 +23,7 @@ const Project = () => {
   }
 
   const getProjects = async () => {
-    const response = await axios.get(`http://192.168.10.30:9000/projectstat/${status.toUpperCase()}`);
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}/projectstat/${status.toUpperCase()}`);
     setProjects(response.data);
   };
   
@@ -57,6 +57,7 @@ const Project = () => {
               <th scope="col">Project Name</th>
               <th scope="col">Participant</th>
               <th scope="col">Progress</th>
+			  <th scope="col">Periode</th>
               <th scope="col">Start Date</th>
               <th scope="col">Due Date</th>
             </tr>
@@ -83,7 +84,8 @@ const Project = () => {
                       <div className="progress-bar bg-info" role="progressbar" style={{width: project.ttlbobot+'%'}} aria-valuenow={project.ttlbobot} aria-valuemin={0} aria-valuemax={100}>{project.ttlbobot}%</div>
                     </div>
                   </td>
-                  <td className="text-center">{Moment(project.startproj).format('DD-MM-YYYY')}</td>
+                  <td className="text-center">{Moment(project.startproj).format('YYYY')}</td>
+				  <td className="text-center">{Moment(project.startproj).format('DD-MM-YYYY')}</td>
                   <td className="text-center">{Moment(project.endproj).format('DD-MM-YYYY')}</td>
                 </tr>
               }

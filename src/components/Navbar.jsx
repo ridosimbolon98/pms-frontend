@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from "axios";
 import { NavLink, useNavigate } from "react-router-dom";
 import Notification from "./Notification";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,12 +8,28 @@ import { LogOut, reset } from "../features/authSlice";
 const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchValue, setSearchValue] = useState('');
   
   const {user} = useSelector((state) => state.auth);
   let username = '';
   
   if(user !== null){
     username = user.name;
+  }
+
+  const searchProject = async (e) => {
+    e.preventDefault();
+    navigate(`/projects/search/${searchValue}`)
+    // try {
+    //   const response = await axios.post(`${process.env.REACT_APP_API_URL}/projects/search`, {
+    //     keyword: searchValue
+    //   });
+    //   let listproj = response.data;
+    //   // console.log(response.data);
+    // } catch (error) {
+    //   console.log(error);
+    // }
+
   }
 
   const logout = () => {
@@ -29,11 +46,11 @@ const Navbar = () => {
         </NavLink>
        
         {/* Topbar Search */}
-        <form className="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+        <form onSubmit={searchProject} className="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
           <div className="input-group">
-            <input type="text" className="form-control bg-light border-0 small" placeholder="Search for..." aria-label="Search" aria-describedby="basic-addon2" />
+            <input type="text" value={searchValue} onChange={(e) => setSearchValue(e.target.value)} className="form-control bg-light border-0 small" placeholder="Search for..." aria-label="Search" aria-describedby="basic-addon2" />
             <div className="input-group-append">
-              <button className="btn btn-info" type="button">
+              <button className="btn btn-info" type="submit">
                 <i className="fas fa-search fa-sm" />
               </button>
             </div>

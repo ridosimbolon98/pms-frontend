@@ -22,7 +22,7 @@ const ProjectAdmin = () => {
 
   const getProjects = async () => {
     let url='';
-    role === 'admin' ? url="http://192.168.10.30:9000/allprojects" : url=`http://192.168.10.30:9000/allprojects`;
+    role === 'admin' ? url=`${process.env.REACT_APP_API_URL}/allprojects` : url=`${process.env.REACT_APP_API_URL}/allprojects`;
     const response = await axios.get(url);
     setProjects(response.data);
   };
@@ -54,6 +54,7 @@ const ProjectAdmin = () => {
               <th scope="col">Project Name</th>
               <th scope="col">Participant</th>
               <th scope="col">Progress</th>
+			  <th scope="col">Periode</th>
               <th scope="col">Start Date</th>
               <th scope="col">Due Date</th>
             </tr>
@@ -78,7 +79,8 @@ const ProjectAdmin = () => {
                   <div className="progress-bar bg-info" role="progressbar" style={{width: project.ttlbobot+'%'}} aria-valuenow={project.ttlbobot} aria-valuemin={0} aria-valuemax={100}>{project.ttlbobot}%</div>
                 </div>
               </td>
-              <td className="text-center">{Moment(project.startproj).format('DD-MM-YYYY')}</td>
+              <td className="text-center">{Moment(project.startproj).format('YYYY')}</td>
+			  <td className="text-center">{Moment(project.startproj).format('DD-MM-YYYY')}</td>
               <td className="text-center">{Moment(project.endproj).format('DD-MM-YYYY')}</td>
             </tr>
           ))}

@@ -49,7 +49,7 @@ const ProjectNew = () => {
   const getDataUser = async () => {
     setIsDisabled(false);
     setOptions([]);
-    const dataUser = await axios.get("http://192.168.10.30:9000/users");
+    const dataUser = await axios.get(`${process.env.REACT_APP_API_URL}/users`);
     dataUser.data.forEach(dtUsr => {
       let dataUser = { label: dtUsr.name, value: dtUsr.id, uid: dtUsr.uuid };
       setOptions(oldArray => [...oldArray,dataUser]);
@@ -57,7 +57,7 @@ const ProjectNew = () => {
   };
 
   const getDataDept = async () => {
-    const dataDept = await axios.get("http://192.168.10.30:9000/getdept");
+    const dataDept = await axios.get(`${process.env.REACT_APP_API_URL}/getdept`);
     setDept(dataDept.data);
   };
 
@@ -73,7 +73,7 @@ const ProjectNew = () => {
 
   const handleDept = async (e) => {
     setBagdept(e);
-    const dataSubDept = await axios.get(`http://192.168.10.30:9000/getsubdept/${e}`);
+    const dataSubDept = await axios.get(`${process.env.REACT_APP_API_URL}/getsubdept/${e}`);
     setSubDept(dataSubDept.data);
   };
 
@@ -102,7 +102,7 @@ const ProjectNew = () => {
         partpnt.data = [...partpnt.data, el]
       ])
       try {
-        const response = await axios.post("http://192.168.10.30:9000/projects", {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/projects`, {
           projectname: projectname,
           description: description,
           bagdept: bagdept,

@@ -1,8 +1,10 @@
 {
-  "name": "frontend",
+  "name": "project-management-system",
+  "homepage": ".",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@aternus/csv-to-xlsx": "^2.0.3",
     "@reduxjs/toolkit": "^1.8.5",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
@@ -10,6 +12,8 @@
     "axios": "^0.27.2",
     "bootstrap": "^5.2.1",
     "moment": "^2.29.4",
+    "path": "^0.12.7",
+    "path-browserify": "^1.0.1",
     "react": "^18.2.0",
     "react-data-table-component": "^7.5.3",
     "react-dom": "^18.2.0",
@@ -25,7 +29,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "set \"GENERATE_SOURCEMAP=false\" && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

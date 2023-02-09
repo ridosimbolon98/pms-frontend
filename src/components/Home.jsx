@@ -14,7 +14,7 @@ const Home = () => {
   const [all_pn, setAllpn] = useState("");
   const [open_pn, setOpenpn] = useState("");
   const [closed_pn, setClosedpn] = useState("");
-  const [pending_pn, setPendingpn] = useState("");
+  const [canceled_pn, setCancelpn] = useState("");
   const {user} = useSelector((state) => state.auth);
 
   let uuid = '';
@@ -26,20 +26,20 @@ const Home = () => {
   const bg = ['progress-bar bg-info','progress-bar bg-danger','progress-bar bg-warning','progress-bar bg-primary','progress-bar bg-success'];
 
   const getProjectNum = async () => {
-    const response = await axios.get(`http://192.168.10.30:9000/getprojectnum`);
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}/getprojectnum`);
     setAllpn(response.data.all_pn[0].proj_num);
     setOpenpn(response.data.open_pn[0].proj_num);
     setClosedpn(response.data.closed_pn[0].proj_num);
-    setPendingpn(response.data.pending_pn[0].proj_num);
+    setCancelpn(response.data.cancel_pn[0].proj_num);
   };
   
   const getNewestProject = async () => {
-    const response = await axios.get(`http://192.168.10.30:9000/newestproject`);
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}/newestproject`);
     setProject(response.data);
   };
   
   const getNewestTask = async () => {
-    const response = await axios.get(`http://192.168.10.30:9000/dbtasks/${uuid}`);
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}/dbtasks/${user && user.uuid}`);
     setNewestTask(response.data);
   };
 
@@ -48,7 +48,7 @@ const Home = () => {
     getProjectNum();
     getNewestProject();
     getNewestTask();
-  }, []);
+  }, [newestTask]);
 
 
   return (
@@ -123,8 +123,8 @@ const Home = () => {
               <div className="row no-gutters align-items-center">
                 <div className="col mr-2">
                   <div className="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                    Pending Project</div>
-                  <div className="h5 mb-0 font-weight-bold text-gray-800">{pending_pn}</div>
+                    Canceled Project</div>
+                  <div className="h5 mb-0 font-weight-bold text-gray-800">{canceled_pn}</div>
                 </div>
                 <div className="col-auto">
                   <i className="fas fa-comments fa-2x text-gray-300" />

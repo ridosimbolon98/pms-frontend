@@ -57,7 +57,7 @@ const AllNotif = () => {
   const getNotif = async () => {
     setData([]);
     try {
-      const response = await axios.get(`http://192.168.10.30:9000/notif/${uuid}`);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/notif/${uuid}`);
       response.data.forEach((items,idx) => {
         let dataRow = { 
           id: idx,
@@ -90,7 +90,7 @@ const AllNotif = () => {
 
   const handleNotifClick = async(fid,id) => {
     try {
-      await axios.patch(`http://192.168.10.30:9000/notif/update/${id}`);
+      await axios.patch(`${process.env.REACT_APP_API_URL}/notif/update/${id}`);
 
       setTimeout(() => {
         navigate(`../projects/detail/${fid}`);

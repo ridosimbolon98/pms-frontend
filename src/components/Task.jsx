@@ -63,7 +63,7 @@ const Task = () => {
   const getAllTask = async () => {
     setTasks([]);
     try {
-      let response = await axios.get(`http://192.168.10.30:9000/mytasks/${id}`);
+      let response = await axios.get(`${process.env.REACT_APP_API_URL}/mytasks/${id}`);
       response.data.forEach((items,idx) => {
         let dataRow = { 
           id: idx,

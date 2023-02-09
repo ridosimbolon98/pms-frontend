@@ -8,7 +8,7 @@ const SubTask = (props) => {
   }, []);
 
   const getSubTask = async () => {
-    const response = await axios.get(`http://192.168.10.30:9000/subtasks/${props.taskid}`);
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}/subtasks/${props.taskid}`);
     setSubTask(response.data);
   };
 

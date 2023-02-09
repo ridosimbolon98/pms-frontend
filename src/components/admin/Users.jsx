@@ -20,7 +20,7 @@ const Users = () => {
   const [isValid, setIsValid] = useState(false);
 
   const getUsers = async () => {
-    const response = await axios.get("http://192.168.10.30:9000/users");
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}/users`);
     setUsers(response.data);
   };
   
